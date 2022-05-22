@@ -73,8 +73,7 @@ def reflections(A: np.ndarray):
     return Q, R
 
 
-def simple_iterations(A: np.ndarray, b: np.ndarray, prec: float, itermax: int):
-    print("simple iterations start")
+def simple_iterations(A: np.ndarray, b: np.ndarray, prec: float):
     n, m = A.shape
     c = np.zeros(n)
     B = np.zeros((m, m))
@@ -83,8 +82,6 @@ def simple_iterations(A: np.ndarray, b: np.ndarray, prec: float, itermax: int):
         c[i] = b[i]/A[i, i]
         for j in range(m):
             B[i, j] = 0 if i==j else -A[i, j]/A[i, i]
-    print("B\n", B)
-    print("c\n", c)
     print("||B|| < 1" if np.linalg.norm(B) < 1 else "||B|| >= 1")
     
     x = np.copy(b)
@@ -95,9 +92,7 @@ def simple_iterations(A: np.ndarray, b: np.ndarray, prec: float, itermax: int):
             break
         x = x1
         itercount += 1
-        if itercount == itermax:
-            print("Iterations limit exceeded")
-            return None
+    print("simple iterations:", itercount)
     return x
 
 
@@ -121,7 +116,6 @@ def seidel1(A: np.ndarray, B: np.ndarray, prec: float):
     n = A.shape[0]
     x = np.zeros(n)
 
-    # L, D, U
     L = np.copy(A)
     L[np.triu_indices(n)] = 0
     U = np.copy(A)
@@ -129,24 +123,17 @@ def seidel1(A: np.ndarray, B: np.ndarray, prec: float):
     D = np.copy(A)
     D[np.triu_indices(n, 1)] = 0
     D[np.tril_indices(n, -1)] = 0
-    # print(L, D, U, sep='\n')
 
     count = 0
     while True:
         x1 = np.copy(x)
         x1 = np.linalg.inv(L + D) @ (-U @ x1 + B)
-        print("norm", np.linalg.norm(A @ x - B))
-        # if np.linalg.norm(x1 - x) <= prec:
-        #     break
+        # print("norm", np.linalg.norm(A @ x - B))
         if np.linalg.norm(A @ x - B) <= prec:
             break
         x = x1
         count += 1
-        print(count)
-        print(x)
-        print('')
-        sleep(1)
-    print("iterations:", count)
+    print("seidel iterations:", count)
     return x
 
 
@@ -201,46 +188,9 @@ A = np.array(A_arr)
 B = np.array(B_arr)
 prec = 0.001
 
-# A = A[[0, 2, 1], 0:3] # меняем местами строки 1 и 2
-# B_new: np.ndarray = np.zeros_like(A) # B
-# C = np.zeros_like(B) # C
+A = A[[2, 1, 0], 0:3]
+B = B[[2, 1, 0]]
 
-# n, m = A.shape
-# for i in range(n):
-#     C[i] = B[i] / A[i, i]
-#     for j in range(m):
-#         if i != j:
-#             B_new[i, j] = -A[i, j] / A[i, i]
-# B1 = np.zeros_like(B_new)
-# B2 = np.zeros_like(B_new)
-
-# B1[1][0] = B_new[1][0]
-# B1[2][0] = B_new[2][0]
-# B1[2][1] = B_new[2][1]
-
-# B2[0][1] = B_new[0][1]
-# B2[0][2] = B_new[0][2]
-# B2[1][2] = B_new[1][2]
-
-# prevX = np.zeros_like(B)
-
-# X = B1.dot(prevX) + B2.dot(prevX) + C
-# iter = 0
-# while abs(X - prevX).max() > prec:
-#     iter += 1
-#     prevX = X
-#     X = B1.dot(prevX) + B2.dot(prevX) + C
-
-# print("Результат:\n", X)
-# print("Результат:\n", seidel(A, B, prec))
-# print("Итераций:", iter)
-# print("Контрольный образец:\n", np.linalg.solve(A, B))
-# print(seidel(A, B, prec))
-# print(seidel1(A, B, prec))
-
-print("A\n", A)
-print("B\n", B)
-print("det A =", round(np.linalg.det(A), 4))
-print("rank A =", np.linalg.matrix_rank(A))
-print(simple_iterations(A, B, prec, 100))
-print("Контроль\n", np.linalg.solve(A, B))
+print("simple iterations", simple_iterations(A, B, prec))
+print("seidel", seidel1(A, B, prec))
+print("Контроль", np.linalg.solve(A, B))
